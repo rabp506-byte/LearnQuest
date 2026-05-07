@@ -14,24 +14,42 @@ export default function Home() {
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadCharacter(userId: string) {
-    const characterData = await getCharacter(userId);
-    setCharacter(characterData);
+  async function loadCharacter(userId: string): Promise<Character | null> {
+    return getCharacter(userId);
   }
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadSession() {
-      try {
-        setLoading(true);
+    function updateLoading(nextLoading: boolean) {
+      if (isMounted) {
+        setLoading(nextLoading);
+      }
+    }
 
+    function resetGameState() {
+      if (isMounted) {
+        setSession(null);
+        setCharacter(null);
+      }
+    }
+
+    async function loadSession() {
+      updateLoading(true);
+
+      try {
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
 
         if (error) {
+          console.error("[LearnQuest] Supabase getSession failed", {
+            message: error.message,
+            name: error.name,
+            status: error.status,
+          });
+
           throw error;
         }
 
@@ -39,19 +57,35 @@ export default function Home() {
 
         setSession(session);
 
-        if (session?.user) {
-          await loadCharacter(session.user.id);
-        } else {
+        if (!session?.user) {
           setCharacter(null);
+          return;
         }
-      } catch (error) {
-        console.error("Error loading session:", error);
-        setSession(null);
-        setCharacter(null);
+
+        try {
+          const characterData = await loadCharacter(session.user.id);
+
+          if (isMounted) {
+            setCharacter(characterData);
+          }
+        } catch (characterError) {
+          console.error("[LearnQuest] Character load failed after getSession", {
+            userId: session.user.id,
+            error: characterError,
+          });
+
+          if (isMounted) {
+            setCharacter(null);
+          }
+        }
+      } catch (sessionError) {
+        console.error("[LearnQuest] Initial session load failed", {
+          error: sessionError,
+        });
+
+        resetGameState();
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        updateLoading(false);
       }
     }
 
@@ -60,21 +94,51 @@ export default function Home() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (_event: string, newSession: Session | null) => {
-        setLoading(true);
-        setSession(newSession);
+      async (event: string, newSession: Session | null) => {
+        updateLoading(true);
 
         try {
-          if (newSession?.user) {
-            await loadCharacter(newSession.user.id);
-          } else {
+          if (isMounted) {
+            setSession(newSession);
+          }
+
+          if (!newSession?.user) {
+            if (isMounted) {
+              setCharacter(null);
+            }
+
+            return;
+          }
+
+          try {
+            const characterData = await loadCharacter(newSession.user.id);
+
+            if (isMounted) {
+              setCharacter(characterData);
+            }
+          } catch (characterError) {
+            console.error("[LearnQuest] Character load failed after auth change", {
+              event,
+              userId: newSession.user.id,
+              error: characterError,
+            });
+
+            if (isMounted) {
+              setCharacter(null);
+            }
+          }
+        } catch (authChangeError) {
+          console.error("[LearnQuest] Auth state change handling failed", {
+            event,
+            userId: newSession?.user?.id,
+            error: authChangeError,
+          });
+
+          if (isMounted) {
             setCharacter(null);
           }
-        } catch (error) {
-          console.error("Error loading character:", error);
-          setCharacter(null);
         } finally {
-          setLoading(false);
+          updateLoading(false);
         }
       },
     );
