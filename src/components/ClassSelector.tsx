@@ -26,10 +26,10 @@ const CLASS_CARDS: ClassCard[] = [
     role: "Tanque",
     description:
       "Protector del equipo. Resiste daño y puede defender a aliados vulnerables.",
-    glowClass: "hover:shadow-[0_0_35px_rgba(234,179,8,0.35)]",
-    borderClass: "border-yellow-500/50 hover:border-yellow-400",
+    glowClass: "hover:shadow-[0_0_35px_rgba(239,68,68,0.45)]",
+    borderClass: "border-red-500/50 hover:border-red-400",
     buttonClass:
-      "from-red-700 via-red-600 to-orange-500 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]",
+      "from-red-700 via-red-600 to-orange-500 hover:shadow-[0_0_15px_rgba(239,68,68,0.6)]",
   },
   {
     className: "mago",
@@ -37,10 +37,10 @@ const CLASS_CARDS: ClassCard[] = [
     role: "Daño",
     description:
       "Maestro de la energía. Tiene mucho AP y puede apoyar al equipo con poder mágico.",
-    glowClass: "hover:shadow-[0_0_35px_rgba(234,179,8,0.35)]",
-    borderClass: "border-yellow-500/50 hover:border-yellow-400",
+    glowClass: "hover:shadow-[0_0_35px_rgba(59,130,246,0.45)]",
+    borderClass: "border-blue-500/50 hover:border-blue-400",
     buttonClass:
-      "from-blue-700 via-blue-600 to-cyan-500 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]",
+      "from-blue-700 via-blue-600 to-cyan-500 hover:shadow-[0_0_15px_rgba(59,130,246,0.6)]",
   },
   {
     className: "curandero",
@@ -48,10 +48,10 @@ const CLASS_CARDS: ClassCard[] = [
     role: "Soporte",
     description:
       "Guardián vital del grupo. Restaura HP y mantiene al equipo en batalla.",
-    glowClass: "hover:shadow-[0_0_35px_rgba(234,179,8,0.35)]",
-    borderClass: "border-yellow-500/50 hover:border-yellow-400",
+    glowClass: "hover:shadow-[0_0_35px_rgba(34,197,94,0.45)]",
+    borderClass: "border-emerald-500/50 hover:border-emerald-400",
     buttonClass:
-      "from-emerald-700 via-emerald-600 to-yellow-500 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)]",
+      "from-emerald-700 via-emerald-600 to-yellow-500 hover:shadow-[0_0_15px_rgba(34,197,94,0.6)]",
   },
 ];
 
@@ -152,7 +152,7 @@ export default function ClassSelector({
           return (
             <article
               key={classCard.className}
-              className={`group relative overflow-hidden rounded-3xl border bg-slate-950 p-5 shadow-xl transition-all duration-300 hover:-translate-y-2 ${classCard.borderClass} ${classCard.glowClass} ${
+              className={`group relative overflow-hidden rounded-3xl border bg-gradient-to-b from-slate-900 via-slate-950 to-black p-5 shadow-xl transition-all duration-300 hover:-translate-y-2 ${classCard.borderClass} ${classCard.glowClass} ${
                 isSelected ? "ring-2 ring-yellow-400/70" : ""
               }`}
             >

@@ -1,21 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
   color-scheme: dark;
-  --background: #020617;
+  --background: #0f172a;
   --foreground: #f8fafc;
-  --accent: #facc15;
+  --accent: #38bdf8;
 }
 
 * {
   box-sizing: border-box;
-}
-
-html {
-  min-height: 100%;
-  background: #020617;
 }
 
 body {
