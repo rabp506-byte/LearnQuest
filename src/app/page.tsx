@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import AuthForm from "@/components/AuthForm";
 import CharacterStatus from "@/components/CharacterStatus";
+import ClassSelector from "@/components/ClassSelector";
 import { getCharacter, supabase } from "@/lib/supabase";
 import type { Character } from "@/lib/game-logic";
 
@@ -58,23 +59,25 @@ export default function Home() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setLoading(true);
-      setSession(newSession);
+    } = supabase.auth.onAuthStateChange(
+      async (_event: string, newSession: Session | null) => {
+        setLoading(true);
+        setSession(newSession);
 
-      try {
-        if (newSession?.user) {
-          await loadCharacter(newSession.user.id);
-        } else {
+        try {
+          if (newSession?.user) {
+            await loadCharacter(newSession.user.id);
+          } else {
+            setCharacter(null);
+          }
+        } catch (error) {
+          console.error("Error loading character:", error);
           setCharacter(null);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Error loading character:", error);
-        setCharacter(null);
-      } finally {
-        setLoading(false);
-      }
-    });
+      },
+    );
 
     return () => {
       isMounted = false;
@@ -120,7 +123,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
-      <div className="w-full max-w-2xl rounded-3xl border border-yellow-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 shadow-2xl shadow-black/70">
+      <div className="w-full max-w-6xl rounded-3xl border border-yellow-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 shadow-2xl shadow-black/70">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-yellow-400">
@@ -150,15 +153,10 @@ export default function Home() {
             <CharacterStatus character={character} studentName={studentName} />
           </div>
         ) : (
-          <div className="rounded-2xl border border-yellow-500/40 bg-yellow-950/20 p-6 text-center shadow-lg">
-            <h2 className="text-xl font-bold text-yellow-300">
-              No se encontró personaje
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-300">
-              Tu cuenta existe, pero todavía no tiene un personaje asignado.
-            </p>
-          </div>
+          <ClassSelector
+            userId={session.user.id}
+            onCharacterCreated={setCharacter}
+          />
         )}
       </div>
     </main>
