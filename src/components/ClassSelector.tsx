@@ -159,7 +159,7 @@ export default function ClassSelector({
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-yellow-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
               <div className="relative z-10">
-                <div className="mb-6 rounded-2xl border border-white/10 bg-black/30 p-5 shadow-inner">
+      https://github.com/rabp506-byte/LearnQuest/pull/14/conflict?name=src%252Fapp%252Flayout.tsx&base_oid=80f7dc2614dfc458d499803a46f95975c38525a6&head_oid=db5ce29fba434fda1f54862b30fe6f1434ca8bda          <div className="mb-6 rounded-2xl border border-white/10 bg-black/30 p-5 shadow-inner">
                   <p className="text-xs font-bold uppercase tracking-[0.25em] text-yellow-300">
                     {classCard.role}
                   </p>
