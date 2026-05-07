@@ -12,12 +12,11 @@ import {
 
 export default function Home() {
   const [character, setCharacter] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
 
   useEffect(() => {
     const storedCharacter = loadCharacterFromLocalStorage();
     setCharacter(storedCharacter);
-    setLoading(false);
   }, []);
 
   function handleResetCharacter() {
