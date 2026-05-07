@@ -1,166 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
 
-import AuthForm from "@/components/AuthForm";
 import CharacterStatus from "@/components/CharacterStatus";
 import ClassSelector from "@/components/ClassSelector";
-import { getCharacter, supabase } from "@/lib/supabase";
 import type { Character } from "@/lib/game-logic";
+import {
+  clearCharacterFromLocalStorage,
+  loadCharacterFromLocalStorage,
+} from "@/lib/local-storage";
 
 export default function Home() {
-  const [session, setSession] = useState<Session | null>(null);
   const [character, setCharacter] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  async function loadCharacter(userId: string): Promise<Character | null> {
-    return getCharacter(userId);
-  }
+  const [loading] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    function updateLoading(nextLoading: boolean) {
-      if (isMounted) {
-        setLoading(nextLoading);
-      }
-    }
-
-    function resetGameState() {
-      if (isMounted) {
-        setSession(null);
-        setCharacter(null);
-      }
-    }
-
-    async function loadSession() {
-      updateLoading(true);
-
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("[LearnQuest] Supabase getSession failed", {
-            message: error.message,
-            name: error.name,
-            status: error.status,
-          });
-
-          throw error;
-        }
-
-        if (!isMounted) return;
-
-        setSession(session);
-
-        if (!session?.user) {
-          setCharacter(null);
-          return;
-        }
-
-        try {
-          const characterData = await loadCharacter(session.user.id);
-
-          if (isMounted) {
-            setCharacter(characterData);
-          }
-        } catch (characterError) {
-          console.error("[LearnQuest] Character load failed after getSession", {
-            userId: session.user.id,
-            error: characterError,
-          });
-
-          if (isMounted) {
-            setCharacter(null);
-          }
-        }
-      } catch (sessionError) {
-        console.error("[LearnQuest] Initial session load failed", {
-          error: sessionError,
-        });
-
-        resetGameState();
-      } finally {
-        updateLoading(false);
-      }
-    }
-
-    loadSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event: string, newSession: Session | null) => {
-        updateLoading(true);
-
-        try {
-          if (isMounted) {
-            setSession(newSession);
-          }
-
-          if (!newSession?.user) {
-            if (isMounted) {
-              setCharacter(null);
-            }
-
-            return;
-          }
-
-          try {
-            const characterData = await loadCharacter(newSession.user.id);
-
-            if (isMounted) {
-              setCharacter(characterData);
-            }
-          } catch (characterError) {
-            console.error("[LearnQuest] Character load failed after auth change", {
-              event,
-              userId: newSession.user.id,
-              error: characterError,
-            });
-
-            if (isMounted) {
-              setCharacter(null);
-            }
-          }
-        } catch (authChangeError) {
-          console.error("[LearnQuest] Auth state change handling failed", {
-            event,
-            userId: newSession?.user?.id,
-            error: authChangeError,
-          });
-
-          if (isMounted) {
-            setCharacter(null);
-          }
-        } finally {
-          updateLoading(false);
-        }
-      },
-    );
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    const storedCharacter = loadCharacterFromLocalStorage();
+    setCharacter(storedCharacter);
   }, []);
 
-  async function handleSignOut() {
-    setLoading(true);
-
-    try {
-      await supabase.auth.signOut();
-      setSession(null);
-      setCharacter(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    } finally {
-      setLoading(false);
-    }
+  function handleResetCharacter() {
+    clearCharacterFromLocalStorage();
+    setCharacter(null);
   }
 
   if (loading) {
@@ -176,14 +37,7 @@ export default function Home() {
     );
   }
 
-  if (!session?.user) {
-    return <AuthForm />;
-  }
-
-  const studentName =
-    session.user.user_metadata?.username ||
-    session.user.email ||
-    "Aventurero";
+  const studentName = "Aventurero Local";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
@@ -199,17 +53,19 @@ export default function Home() {
             </h1>
 
             <p className="mt-1 text-sm text-slate-400">
-              Tu aventura de aprendizaje continúa.
+              Tu aventura local de aprendizaje continúa.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="rounded-xl border border-slate-500 bg-slate-800 px-5 py-3 text-sm font-bold text-slate-100 shadow-lg transition hover:border-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]"
-          >
-            Cerrar Sesión
-          </button>
+          {character && (
+            <button
+              type="button"
+              onClick={handleResetCharacter}
+              className="rounded-xl border border-slate-500 bg-slate-800 px-5 py-3 text-sm font-bold text-slate-100 shadow-lg transition hover:border-yellow-400 hover:text-yellow-300 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]"
+            >
+              Reiniciar Personaje
+            </button>
+          )}
         </div>
 
         {character ? (
@@ -217,10 +73,7 @@ export default function Home() {
             <CharacterStatus character={character} studentName={studentName} />
           </div>
         ) : (
-          <ClassSelector
-            userId={session.user.id}
-            onCharacterCreated={setCharacter}
-          />
+          <ClassSelector onCharacterCreated={setCharacter} />
         )}
       </div>
     </main>

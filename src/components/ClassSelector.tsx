@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import type { Character, CharacterClass } from "@/lib/game-logic";
 import { GAME_CONSTANTS } from "@/lib/game-logic";
+import { saveCharacterToLocalStorage } from "@/lib/local-storage";
 
 interface ClassSelectorProps {
-  userId: string;
   onCharacterCreated?: (character: Character) => void;
 }
 
@@ -68,7 +67,6 @@ function StatPill({ label, value }: { label: string; value: number }) {
 }
 
 export default function ClassSelector({
-  userId,
   onCharacterCreated,
 }: ClassSelectorProps) {
   const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(
@@ -77,7 +75,7 @@ export default function ClassSelector({
   const [loadingClass, setLoadingClass] = useState<CharacterClass | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function createCharacter(characterClass: CharacterClass) {
+  function createCharacter(characterClass: CharacterClass) {
     setLoadingClass(characterClass);
     setSelectedClass(characterClass);
     setErrorMessage(null);
@@ -85,33 +83,31 @@ export default function ClassSelector({
     const baseStats = GAME_CONSTANTS.BASE_STATS[characterClass];
 
     try {
-      const { data, error } = await supabase
-        .from("characters")
-        .insert({
-          profile_id: userId,
-          class: characterClass,
+      const now = new Date().toISOString();
+      const character = {
+        id: crypto.randomUUID(),
+        profile_id: "local-adventurer",
+        class: characterClass,
 
-          hp: baseStats.hp,
-          max_hp: baseStats.max_hp,
+        hp: baseStats.hp,
+        max_hp: baseStats.max_hp,
 
-          xp: 0,
+        xp: 0,
 
-          ap: baseStats.ap,
-          max_ap: baseStats.max_ap,
+        ap: baseStats.ap,
+        max_ap: baseStats.max_ap,
 
-          pp: baseStats.pp,
+        pp: baseStats.pp,
 
-          level: 1,
-          gold: 0,
-        })
-        .select("*")
-        .single();
+        level: 1,
+        gold: 0,
 
-      if (error) {
-        throw error;
-      }
+        created_at: now,
+        updated_at: now,
+      } satisfies Character;
 
-      onCharacterCreated?.(data as Character);
+      saveCharacterToLocalStorage(character);
+      onCharacterCreated?.(character);
     } catch (error) {
       const message =
         error instanceof Error
